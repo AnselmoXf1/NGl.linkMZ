@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento - NGL.MZ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-credit-card"></i> Pagamento M-Pesa
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Mensagem a Revelar:</h5>
+                        <div class="alert alert-light">
+                            <p class="mb-0">{{ message.content }}</p>
+                        </div>
+                        
+                        <h5>Informações que serão reveladas:</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="fas fa-globe"></i> Endereço IP
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-browser"></i> Navegador utilizado
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-map-marker-alt"></i> Localização aproximada
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Detalhes do Pagamento:</h5>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <span>Valor:</span>
+                                    <strong>50.00 MZN</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span>Taxa de processamento:</span>
+                                    <span>0.00 MZN</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span><strong>Total:</strong></span>
+                                    <strong>50.00 MZN</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form id="paymentForm" method="POST" action="{{ url_for('process_payment') }}">
+                            <input type="hidden" name="message_id" value="{{ message.id }}">
+                            
+                            <div class="mb-3">
+                                <label for="phone_number" class="form-label">Número do M-Pesa:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">+258</span>
+                                    <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                           placeholder="8XXXXXXXX" pattern="8[0-9]{8}" required>
+                                </div>
+                                <div class="form-text">Digite seu número M-Pesa (ex: 8XXXXXXXX)</div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-mobile-alt"></i> Pagar com M-Pesa
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div id="paymentResult" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Como Funciona o Pagamento
+                </h5>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Digite seu número M-Pesa</div>
+                            Certifique-se de que o número está correto
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Confirme o pagamento</div>
+                            Você receberá uma notificação no seu telefone
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Digite o PIN M-Pesa</div>
+                            Complete a transação no seu telefone
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Mensagem revelada!</div>
+                            As informações do remetente serão exibidas
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('inbox') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar à Caixa de Entrada
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const phoneNumber = document.getElementById('phone_number').value;
+    const resultDiv = document.getElementById('paymentResult');
+    
+    if (!phoneNumber) {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Por favor, digite seu número M-Pesa!</div>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processando pagamento...</div>';
+    
+    try {
+        const formData = new FormData();
+        formData.append('message_id', '{{ message.id }}');
+        formData.append('phone_number', phoneNumber);
+        
+        const response = await fetch('/process_payment', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> 
+                    <strong>Pagamento processado com sucesso!</strong><br>
+                    Recibo: ${result.receipt}<br>
+                    <small>Verifique seu telefone para confirmar o pagamento.</small>
+                </div>
+            `;
+            
+            // Redirect to inbox after 3 seconds
+            setTimeout(() => {
+                window.location.href = '{{ url_for("inbox") }}';
+            }, 3000);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <strong>Erro no pagamento:</strong><br>
+                    ${result.error}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> 
+                <strong>Erro de conexão:</strong><br>
+                Tente novamente em alguns instantes.
+            </div>
+        `;
+    }
+});
+
+// Format phone number input
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 9) {
+        value = value.substring(0, 9);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - NGL.MZ{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-user"></i> @{{ user.username }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Seu Link Pessoal:</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="profileLink" 
+                                   value="{{ request.url_root }}u/{{ user.username }}" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        
+                <div class="alert alert-success">
+                    <i class="fas fa-share-alt"></i>
+                    <strong>Compartilhe este link</strong> para receber mensagens anônimas!<br>
+                    <small>Quando alguém acessar seu link, verá apenas um formulário para enviar mensagens anônimas.</small>
+                </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Estatísticas:</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Mensagens recebidas:</span>
+                                <span class="badge bg-primary">{{ user.messages|length }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Mensagens reveladas:</span>
+                                <span class="badge bg-success">{{ user.messages|selectattr('is_revealed')|list|length }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Membro desde:</span>
+                                <span>{{ user.created_at.strftime('%d/%m/%Y') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('inbox') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-inbox"></i> Ver Mensagens
+                    </a>
+                    <a href="{{ url_for('image_generator') }}" class="btn btn-success">
+                        <i class="fas fa-image"></i> Gerar Imagem para Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-share-alt"></i> Compartilhar
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Compartilhe seu link nas redes sociais:</p>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="btn btn-outline-info" onclick="shareOnTelegram()">
+                        <i class="fab fa-telegram"></i> Telegram
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="shareOnTwitter()">
+                        <i class="fab fa-twitter"></i> Twitter
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-qrcode"></i> QR Code
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="qrcode" class="mb-3"></div>
+                <p class="text-muted mb-3">Escaneie para enviar mensagem anônima</p>
+                
+                <!-- Controles do QR Code -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label small">Tamanho:</label>
+                        <select class="form-select form-select-sm" id="qrSize" onchange="regenerateQR()">
+                            <option value="150">Pequeno (150px)</option>
+                            <option value="200" selected>Médio (200px)</option>
+                            <option value="250">Grande (250px)</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Cor:</label>
+                        <select class="form-select form-select-sm" id="qrColor" onchange="regenerateQR()">
+                            <option value="#000000" selected>Preto</option>
+                            <option value="#007bff">Azul</option>
+                            <option value="#28a745">Verde</option>
+                            <option value="#dc3545">Vermelho</option>
+                            <option value="#6f42c1">Roxo</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="downloadQRCode()">
+                        <i class="fas fa-download"></i> Baixar QR Code
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="generateCustomQR()">
+                        <i class="fas fa-magic"></i> QR Code Personalizado
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="copyQRCode()">
+                        <i class="fas fa-copy"></i> Copiar Link
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-gradient-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-image"></i> Imagem para Status
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="card-text">Crie imagens personalizadas para compartilhar nas redes sociais</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('image_generator') }}" class="btn btn-success">
+                        <i class="fas fa-magic"></i> Gerar Imagem
+                    </a>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    WhatsApp • Instagram • Twitter
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Form for Anonymous Users -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensagem Anônima
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="anonymousMessageForm">
+                    <div class="mb-3">
+                        <label for="anonymousMessage" class="form-label">Sua mensagem:</label>
+                        <textarea class="form-control" id="anonymousMessage" name="message" rows="4" 
+                                  placeholder="Digite sua mensagem anônima aqui..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-paper-plane"></i> Enviar Mensagem Anônima
+                    </button>
+                </form>
+                
+                <div id="anonymousResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/qr-generator.js') }}"></script>
+{% endblock %}

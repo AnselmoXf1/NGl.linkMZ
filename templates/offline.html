@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Offline - NGL.MZ{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow text-center">
+            <div class="card-body p-5">
+                <h1 class="display-1 text-muted">📡</h1>
+                <h2 class="card-title mb-4">Você está offline</h2>
+                
+                <p class="text-muted mb-4">
+                    Não foi possível conectar à internet. Verifique sua conexão e tente novamente.
+                </p>
+                
+                <button onclick="window.location.reload()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sync-alt"></i> Tentar Novamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Enviar mensagem para {{ user.username }} - NGL.MZ{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5">
+    <div class="container">
+        <h1 class="display-4 mb-4">
+            <i class="fas fa-message text-primary"></i> NGL.MZ
+        </h1>
+        <p class="lead mb-4">Envie uma mensagem anônima para <strong>@{{ user.username }}</strong></p>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg">
+                    <div class="card-body p-5">
+                        <h3 class="card-title mb-4">
+                            <i class="fas fa-paper-plane text-primary"></i> Enviar Mensagem Anônima
+                        </h3>
+                        
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Mensagem para:</strong> @{{ user.username }}<br>
+                            <small>Sua mensagem será enviada de forma 100% anônima. Apenas @{{ user.username }} poderá ver a mensagem.</small>
+                        </div>
+                        
+                        <form id="messageForm">
+                            <div class="mb-3">
+                                <label for="message" class="form-label">
+                                    <i class="fas fa-comment"></i> Sua mensagem anônima:
+                                </label>
+                                <textarea class="form-control" id="message" name="message" rows="4" 
+                                          placeholder="Digite sua mensagem anônima para @{{ user.username }} aqui..." required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-paper-plane"></i> Enviar Mensagem Anônima
+                            </button>
+                        </form>
+                        
+                        <div id="result" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações sobre anonimato -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body text-center p-4">
+                        <h5 class="card-title mb-3">
+                            <i class="fas fa-user-secret"></i> Como funciona?
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <i class="fas fa-shield-alt fa-2x text-primary mb-2"></i>
+                                <h6>100% Anônimo</h6>
+                                <p class="small">Sua identidade permanece completamente oculta</p>
+                            </div>
+                            <div class="col-md-4">
+                                <i class="fas fa-eye fa-2x text-success mb-2"></i>
+                                <h6>Revelar Identidade</h6>
+                                <p class="small">@{{ user.username }} pode pagar para descobrir quem enviou</p>
+                            </div>
+                            <div class="col-md-4">
+                                <i class="fas fa-mobile-alt fa-2x text-warning mb-2"></i>
+                                <h6>Pagamento M-Pesa</h6>
+                                <p class="small">Sistema de pagamento seguro integrado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('messageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const message = document.getElementById('message').value;
+    const resultDiv = document.getElementById('result');
+    
+    if (!message) {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Por favor, digite uma mensagem!</div>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="alert alert-info">Enviando mensagem...</div>';
+    
+    try {
+        const formData = new FormData();
+        formData.append('message', message);
+        
+        const response = await fetch(`/send_message/{{ user.username }}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            resultDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check"></i> Mensagem enviada com sucesso! @{{ user.username }} receberá sua mensagem anônima.</div>';
+            document.getElementById('messageForm').reset();
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Erro: ${result.error}</div>`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Erro ao enviar mensagem. Tente novamente.</div>';
+    }
+});
+</script>
+{% endblock %}

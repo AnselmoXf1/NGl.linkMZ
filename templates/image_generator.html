@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Imagem para Status - NGL.MZ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .image-preview {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .status-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .whatsapp-size { width: 400px; height: 400px; }
+        .instagram-story-size { width: 400px; height: 711px; }
+        .instagram-post-size { width: 400px; height: 400px; }
+        
+        .download-btn {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+        
+        .instagram-btn {
+            background: linear-gradient(45deg, #E4405F, #C13584, #833AB4);
+        }
+        
+        .twitter-btn {
+            background: linear-gradient(45deg, #1DA1F2, #0d8bd9);
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h1 class="text-white mb-3">
+                        <i class="fas fa-image"></i> Gerar Imagem para Status
+                    </h1>
+                    <p class="text-white-50">Crie imagens personalizadas para compartilhar seu link</p>
+                </div>
+                
+                <!-- Controles -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-cog"></i> Personalizar Imagem
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tamanho da Imagem:</label>
+                                <select class="form-select" id="imageSize">
+                                    <option value="whatsapp">WhatsApp Status (400x400)</option>
+                                    <option value="instagram-story">Instagram Story (400x711)</option>
+                                    <option value="instagram-post">Instagram Post (400x400)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cor de Fundo:</label>
+                                <div class="d-flex gap-2">
+                                    <input type="color" class="form-control form-control-color" id="bgColor" value="#667eea">
+                                    <button class="btn btn-outline-secondary" onclick="randomColor()">
+                                        <i class="fas fa-random"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Mensagem Personalizada:</label>
+                                <input type="text" class="form-control" id="customMessage" 
+                                       placeholder="Ex: Envie-me uma mensagem anônima!" 
+                                       value="Envie-me uma mensagem anônima!">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Seu Link:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="username" 
+                                           value="{{ user.username }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="generateImage()">
+                            <i class="fas fa-magic"></i> Gerar Imagem
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Preview da Imagem -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title mb-4">
+                            <i class="fas fa-eye"></i> Preview da Imagem
+                        </h5>
+                        
+                        <div class="image-preview mx-auto" id="imagePreview">
+                            <div id="imageContainer" class="text-center p-5">
+                                <p class="text-muted">Clique em "Gerar Imagem" para ver o preview</p>
+                            </div>
+                            <div id="loadingStatus" class="text-center mt-3" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Gerando...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Gerando QR Code...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4" id="downloadButtons" style="display: none;">
+                            <button class="btn download-btn me-2" onclick="downloadImage('whatsapp')">
+                                <i class="fab fa-whatsapp"></i> Download WhatsApp
+                            </button>
+                            <button class="btn download-btn instagram-btn me-2" onclick="downloadImage('instagram')">
+                                <i class="fab fa-instagram"></i> Download Instagram
+                            </button>
+                            <button class="btn download-btn twitter-btn" onclick="downloadImage('twitter')">
+                                <i class="fab fa-twitter"></i> Download Twitter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentImageData = null;
+        
+        function generateImage() {
+            const size = document.getElementById('imageSize').value;
+            const bgColor = document.getElementById('bgColor').value;
+            const customMessage = document.getElementById('customMessage').value;
+            const username = document.getElementById('username').value;
+            
+            // Mostrar status de carregamento
+            document.getElementById('loadingStatus').style.display = 'block';
+            document.getElementById('downloadButtons').style.display = 'none';
+            
+            // Definir dimensões baseadas no tamanho selecionado
+            let width, height;
+            switch(size) {
+                case 'whatsapp':
+                    width = 400; height = 400;
+                    break;
+                case 'instagram-story':
+                    width = 400; height = 711;
+                    break;
+                case 'instagram-post':
+                    width = 400; height = 400;
+                    break;
+            }
+            
+            // Criar canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Criar gradiente de fundo
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, bgColor);
+            gradient.addColorStop(1, adjustColor(bgColor, -20));
+            
+            // Preencher fundo
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Adicionar padrão de pontos
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * width;
+                const y = Math.random() * height;
+                const radius = Math.random() * 3 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Configurar fonte
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Ícone de mensagem
+            const iconSize = width > 400 ? 48 : 36;
+            ctx.font = `${iconSize}px Arial`;
+            ctx.fillText('💬', width / 2, height * 0.25);
+            
+            // Título NGL.MZ
+            ctx.font = `bold ${width > 400 ? 32 : 24}px Arial`;
+            ctx.fillStyle = 'white';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fillText('NGL.MZ', width / 2, height * 0.35);
+            
+            // Mensagem personalizada
+            ctx.font = `${width > 400 ? 20 : 16}px Arial`;
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.fillStyle = 'white';
+            
+            // Quebrar texto em linhas se necessário
+            const words = customMessage.split(' ');
+            const lines = [];
+            let currentLine = '';
+            const maxWidth = width - 40;
+            
+            for (let word of words) {
+                const testLine = currentLine + word + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine !== '') {
+                    lines.push(currentLine);
+                    currentLine = word + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+            
+            // Desenhar linhas de texto
+            lines.forEach((line, index) => {
+                ctx.fillText(line.trim(), width / 2, height * 0.45 + (index * 25));
+            });
+            
+            // Caixa do username
+            const usernameY = height * 0.6;
+            const boxWidth = 200;
+            const boxHeight = 40;
+            const boxX = (width - boxWidth) / 2;
+            const boxY = usernameY - boxHeight / 2;
+            
+            // Fundo da caixa
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+            
+            // Borda da caixa
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+            
+            // Texto do username
+            ctx.font = `bold ${width > 400 ? 18 : 14}px Arial`;
+            ctx.fillStyle = 'white';
+            ctx.fillText(`@${username}`, width / 2, usernameY);
+            
+            // Texto inferior
+            ctx.font = `${width > 400 ? 14 : 12}px Arial`;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText('Envie mensagens anônimas', width / 2, height * 0.8);
+            
+            // Adicionar QR Code simples (simulado)
+            const qrUrl = `${window.location.origin}/u/${username}`;
+            
+            // Criar um QR Code simples usando padrões
+            const qrSize = 60;
+            const qrX = width - qrSize - 20;
+            const qrY = height - qrSize - 20;
+            
+            // Fundo branco para o QR Code
+            ctx.fillStyle = 'white';
+            ctx.fillRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10);
+            
+            // Borda preta
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10);
+            
+            // Simular padrão de QR Code com quadrados
+            ctx.fillStyle = 'black';
+            const squareSize = 4;
+            const squares = [
+                [0, 0], [2, 0], [4, 0], [6, 0], [8, 0], [10, 0], [12, 0], [14, 0],
+                [0, 2], [2, 2], [4, 2], [6, 2], [8, 2], [10, 2], [12, 2], [14, 2],
+                [0, 4], [2, 4], [4, 4], [6, 4], [8, 4], [10, 4], [12, 4], [14, 4],
+                [0, 6], [2, 6], [4, 6], [6, 6], [8, 6], [10, 6], [12, 6], [14, 6],
+                [0, 8], [2, 8], [4, 8], [6, 8], [8, 8], [10, 8], [12, 8], [14, 8],
+                [0, 10], [2, 10], [4, 10], [6, 10], [8, 10], [10, 10], [12, 10], [14, 10],
+                [0, 12], [2, 12], [4, 12], [6, 12], [8, 12], [10, 12], [12, 12], [14, 12],
+                [0, 14], [2, 14], [4, 14], [6, 14], [8, 14], [10, 14], [12, 14], [14, 14]
+            ];
+            
+            squares.forEach(([x, y]) => {
+                ctx.fillRect(qrX + x * squareSize, qrY + y * squareSize, squareSize, squareSize);
+            });
+            
+            // Adicionar texto do link abaixo do QR Code
+            ctx.font = '10px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText('Scan me!', qrX + qrSize/2, qrY + qrSize + 15);
+            
+            // Mostrar a imagem final
+            showFinalImage(canvas);
+        }
+        
+        function showFinalImage(canvas) {
+            // Esconder status de carregamento
+            document.getElementById('loadingStatus').style.display = 'none';
+            
+            // Mostrar preview
+            const container = document.getElementById('imageContainer');
+            container.innerHTML = `<img src="${canvas.toDataURL()}" class="status-image" alt="Status Image">`;
+            
+            // Armazenar dados da imagem
+            currentImageData = canvas.toDataURL();
+            
+            // Mostrar botões de download
+            document.getElementById('downloadButtons').style.display = 'block';
+        }
+        
+        function downloadImage(platform) {
+            if (!currentImageData) {
+                alert('Gere uma imagem primeiro!');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `ngl-mz-${platform}-${document.getElementById('username').value}.png`;
+            link.href = currentImageData;
+            link.click();
+        }
+        
+        function randomColor() {
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('bgColor').value = randomColor;
+        }
+        
+        function adjustColor(color, amount) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const r = Math.max(0, Math.min(255, ((num >> 16) & 255) + amount));
+            const g = Math.max(0, Math.min(255, ((num >> 8) & 255) + amount));
+            const b = Math.max(0, Math.min(255, (num & 255) + amount));
+            return "#" + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+        }
+        
+        // Gerar imagem inicial
+        window.onload = function() {
+            // Aguardar um pouco para garantir que as bibliotecas carregaram
+            setTimeout(() => {
+                generateImage();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
